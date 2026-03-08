@@ -1,0 +1,293 @@
+// prisma/schema.prisma
+// CrescitechMD - Database Schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// USUÁRIOS E AUTENTICAÇÃO
+// ============================================
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum PlanType {
+  FREE
+  BASIC
+  PRO
+  BUSINESS
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  name          String?
+  password      String       // bcrypt hash
+  role          UserRole     @default(USER)
+  plan          PlanType     @default(FREE)
+  emailVerified Boolean      @default(false)
+  referralCode  String?      @unique // Codigo de indicacao unico (8-char nanoid)
+
+  // Relações
+  credits      Credits?
+  conversions  Conversion[]
+  subscription Subscription?
+  referrals    Referral[]    @relation("Referrer")
+  referredBy   Referral?     @relation("Referred")
+  auditLogs    AuditLog[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([plan])
+}
+
+// ============================================
+// SISTEMA DE CRÉDITOS
+// ============================================
+
+model Credits {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount    Int      @default(5) // Créditos disponíveis
+  lastReset DateTime @default(now()) // Última renovação mensal
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ============================================
+// CONVERSÕES
+// ============================================
+
+enum ConversionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum FileFormat {
+  PDF
+  DOCX
+  PPTX
+  XLSX
+  PNG
+  JPEG
+  HTML
+}
+
+model Conversion {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Arquivo original
+  originalFileName String
+  originalFormat   FileFormat
+  originalSize     Int // bytes
+
+  // Arquivo convertido
+  markdownUrl  String // Vercel Blob URL
+  markdownSize Int? // bytes
+
+  // Configurações de conversão
+  preserveImages  Boolean @default(true)
+  preserveTables  Boolean @default(true)
+  preserveHeaders Boolean @default(true)
+
+  // Status
+  status       ConversionStatus @default(PENDING)
+  errorMessage String?
+
+  // Processamento
+  processingTime Int? // segundos
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// ASSINATURAS STRIPE
+// ============================================
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  PAUSED
+}
+
+model Subscription {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Stripe
+  stripeCustomerId     String @unique
+  stripeSubscriptionId String @unique
+  stripePriceId        String
+
+  // Plano
+  plan   PlanType
+  status SubscriptionStatus
+
+  // Datas
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  canceledAt         DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([status])
+}
+
+// ============================================
+// SISTEMA DE REFERÊNCIA
+// ============================================
+
+enum ReferralStatus {
+  PENDING   // Indicado cadastrou mas não converteu
+  CONVERTED // Indicado fez primeiro pagamento
+  REWARDED  // Referenciador recebeu bônus
+}
+
+model Referral {
+  id String @id @default(uuid())
+
+  // Quem indicou
+  referrerId String
+  referrer   User   @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  // Quem foi indicado
+  referredId String @unique
+  referred   User   @relation("Referred", fields: [referredId], references: [id], onDelete: Cascade)
+
+  // Código único de indicação
+  referralCode String @unique
+
+  // Status e recompensas
+  status         ReferralStatus @default(PENDING)
+  creditsAwarded Int            @default(0)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([referrerId])
+  @@index([referralCode])
+  @@index([status])
+}
+
+// ============================================
+// LOGS DE AUDITORIA
+// ============================================
+
+enum AuditAction {
+  USER_LOGIN
+  USER_LOGOUT
+  USER_SIGNUP
+  CONVERSION_START
+  CONVERSION_SUCCESS
+  CONVERSION_FAILED
+  PLAN_UPGRADED
+  PLAN_DOWNGRADED
+  PLAN_CANCELED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  CREDITS_ADDED
+  CREDITS_DEDUCTED
+  CREDITS_RESET
+  REFERRAL_CREATED
+  REFERRAL_CONVERTED
+}
+
+model AuditLog {
+  id     String  @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action    AuditAction
+  details   Json? // Dados adicionais em JSON
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ============================================
+// MÉTRICAS E ANALYTICS
+// ============================================
+
+model DailyMetrics {
+  id   String   @id @default(uuid())
+  date DateTime @unique @db.Date
+
+  // Usuários
+  newUsers    Int @default(0)
+  activeUsers Int @default(0)
+
+  // Conversões
+  totalConversions      Int @default(0)
+  successfulConversions Int @default(0)
+  failedConversions     Int @default(0)
+
+  // Receita
+  mrr                   Decimal @default(0) @db.Decimal(10, 2)
+  newSubscriptions      Int     @default(0)
+  canceledSubscriptions Int     @default(0)
+
+  // Planos
+  freeUsers     Int @default(0)
+  basicUsers    Int @default(0)
+  proUsers      Int @default(0)
+  businessUsers Int @default(0)
+
+  // Referências
+  newReferrals       Int @default(0)
+  convertedReferrals Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+// ============================================
+// CONFIGURAÇÕES DO SISTEMA
+// ============================================
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}
