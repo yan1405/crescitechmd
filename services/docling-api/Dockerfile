@@ -2,7 +2,6 @@ FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
-# System dependencies minimas
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     poppler-utils \
@@ -10,13 +9,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Instala dependencias Python
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && find /usr/local/lib/python3.11 -name "*.pyc" -delete \
+    && find /usr/local/lib/python3.11 -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
-# Copia codigo
 COPY converter.py .
 COPY main.py .
+
+ENV DOCLING_ARTIFACTS_PATH=/tmp/docling-models
+ENV HF_HOME=/tmp/huggingface
 
 EXPOSE 8000
 
