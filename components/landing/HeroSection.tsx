@@ -29,8 +29,16 @@ export function HeroSection() {
           </Button>
         </div>
 
-        {/* Demo visual */}
-        <div role="img" aria-label="Demonstração: arquivo PDF convertido para Markdown" className="mx-auto mt-12 max-w-3xl rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-6 shadow-sm sm:p-8">
+        {/* Demo visual — janela estilo macOS */}
+        <div role="img" aria-label="Demonstração: arquivo PDF convertido para Markdown" className="mx-auto mt-12 max-w-3xl overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] shadow-lg">
+          {/* Barra macOS */}
+          <div className="flex h-9 items-center gap-2 border-b border-[#E5E7EB] bg-[#F0F0F0] px-4">
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: '#FF5F57' }} />
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: '#FFBD2E' }} />
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: '#28C840' }} />
+          </div>
+
+          <div className="p-6 sm:p-8">
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
             <div className="flex flex-col items-center gap-2">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0066CC]/10">
@@ -67,6 +75,7 @@ export function HeroSection() {
             <p className="mt-1 text-[#4B5563]">
               | Métrica | Q3 | Q4 | Variação |
             </p>
+          </div>
           </div>
         </div>
       </div>
