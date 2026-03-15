@@ -1,9 +1,6 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+'use client'
+
+import * as AccordionPrimitive from '@radix-ui/react-accordion'
 
 const faqs = [
   {
@@ -35,23 +32,42 @@ const faqs = [
 
 export function FAQSection() {
   return (
-    <section className="bg-[#F9FAFB] px-4 py-16 sm:px-6 sm:py-20">
+    <section className="bg-[#1D3557] px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-3xl">
-        <h2 className="text-center text-3xl font-semibold text-[#111827] sm:text-4xl">
-          Perguntas Frequentes
+        <h2 className="text-3xl font-bold text-white sm:text-4xl">
+          <span className="text-[#00B5C5]">&#10022; </span>
+          FAQs
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-[#4B5563]">
-          Tire suas dúvidas sobre o CrescitechMD
-        </p>
 
-        <Accordion type="single" collapsible className="mt-10">
+        <AccordionPrimitive.Root
+          type="single"
+          collapsible
+          defaultValue="item-0"
+          className="mt-10"
+        >
           {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger>{faq.question}</AccordionTrigger>
-              <AccordionContent>{faq.answer}</AccordionContent>
-            </AccordionItem>
+            <AccordionPrimitive.Item
+              key={index}
+              value={`item-${index}`}
+              className="border-b border-white/10"
+            >
+              <AccordionPrimitive.Header className="flex">
+                <AccordionPrimitive.Trigger className="group flex w-full items-center justify-between py-5 text-left text-base font-semibold text-white outline-none transition-colors hover:text-[#00B5C5] sm:text-lg">
+                  {faq.question}
+                  <span className="ml-4 flex h-6 w-6 shrink-0 items-center justify-center text-xl text-[#00B5C5]">
+                    <span className="block group-data-[state=open]:hidden">+</span>
+                    <span className="hidden group-data-[state=open]:block">&minus;</span>
+                  </span>
+                </AccordionPrimitive.Trigger>
+              </AccordionPrimitive.Header>
+              <AccordionPrimitive.Content className="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down sm:text-base">
+                <p className="pb-5 leading-relaxed text-[#A8C0D6]">
+                  {faq.answer}
+                </p>
+              </AccordionPrimitive.Content>
+            </AccordionPrimitive.Item>
           ))}
-        </Accordion>
+        </AccordionPrimitive.Root>
       </div>
     </section>
   )
