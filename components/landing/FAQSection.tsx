@@ -35,8 +35,7 @@ export function FAQSection() {
     <section className="bg-white px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-3xl">
         <h2 className="text-3xl font-bold text-[#111827] sm:text-4xl">
-          <span className="text-[#0066CC]">&#10022; </span>
-          Perguntas Frequentes
+Perguntas Frequentes
         </h2>
 
         <AccordionPrimitive.Root
