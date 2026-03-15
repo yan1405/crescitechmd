@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface SignupFormProps {
   defaultReferralCode?: string
@@ -80,8 +81,14 @@ export function SignupForm({ defaultReferralCode = '' }: SignupFormProps) {
   return (
     <Card className="border-[#E5E7EB] shadow-sm">
       <CardHeader className="text-center space-y-1">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-[#0066CC]">CrescitechMD</h1>
+        <div className="mb-4 flex justify-center">
+          <Image
+            src="/logocrescitech.png"
+            alt="CrescitechMD"
+            width={160}
+            height={48}
+            priority
+          />
         </div>
         <CardTitle className="text-2xl font-semibold text-[#111827]">
           Criar conta gratuita

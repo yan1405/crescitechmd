@@ -87,7 +87,7 @@ const faqCategories = [
       {
         question: 'Posso exportar ou excluir meus dados?',
         answer:
-          'Sim. De acordo com a LGPD, você tem direito a acessar, corrigir, exportar e excluir seus dados pessoais. Entre em contato com nosso DPO pelo email yan@crescitech.com para solicitar qualquer operação sobre seus dados.',
+          'Sim. De acordo com a LGPD, você tem direito a acessar, corrigir, exportar e excluir seus dados pessoais. Entre em contato com nosso DPO pelo email yansilva@crescitech.com.br para solicitar qualquer operação sobre seus dados.',
       },
     ],
   },

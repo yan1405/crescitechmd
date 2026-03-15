@@ -1,17 +1,19 @@
 import Link from 'next/link'
-import { FileText } from 'lucide-react'
+import Image from 'next/image'
 
 export function Footer() {
   return (
     <footer className="border-t border-[#E5E7EB] bg-white px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-[#0066CC]" />
-            <span className="text-base font-semibold text-[#111827]">
-              CrescitechMD
-            </span>
-          </div>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/logocrescitech.png"
+              alt="CrescitechMD"
+              width={110}
+              height={32}
+            />
+          </Link>
 
           <nav aria-label="Navegação do rodapé" className="flex flex-wrap justify-center gap-6 text-sm text-[#4B5563]">
             <Link href="/faq" className="hover:text-[#111827]">

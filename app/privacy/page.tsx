@@ -214,7 +214,7 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>Email:</strong>{' '}
-              <a href="mailto:yan@crescitech.com">yan@crescitech.com</a>
+              <a href="mailto:yansilva@crescitech.com.br">yansilva@crescitech.com.br</a>
             </li>
           </ul>
 

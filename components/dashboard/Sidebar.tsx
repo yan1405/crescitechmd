@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import {
@@ -51,8 +52,13 @@ export function Sidebar({ userRole, open, onClose }: SidebarProps) {
       >
         {/* Logo */}
         <div className="flex h-16 items-center justify-between border-b border-[#E5E7EB] px-6">
-          <Link href="/dashboard" className="text-xl font-bold text-[#0066CC]">
-            CrescitechMD
+          <Link href="/dashboard">
+            <Image
+              src="/logocrescitech.png"
+              alt="CrescitechMD"
+              width={130}
+              height={38}
+            />
           </Link>
           <button onClick={onClose} className="lg:hidden">
             <X className="h-5 w-5 text-[#4B5563]" />
