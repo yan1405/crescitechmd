@@ -1,17 +1,20 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
-# System dependencies for Docling (PDF/image processing)
+# System dependencies minimas
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 \
     libglib2.0-0 \
     poppler-utils \
-    && rm -rf /var/lib/apt/lists/*
+    libgl1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Instala dependencias Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copia codigo
 COPY converter.py .
 COPY main.py .
 
