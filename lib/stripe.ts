@@ -1,16 +1,27 @@
+import 'server-only'
 import Stripe from 'stripe'
+
+// Re-export plan config for backwards compatibility in server-only code
+export { PLAN_CREDITS, PLAN_DETAILS } from '@/lib/plans'
+export type { PlanKey } from '@/lib/plans'
 
 // ============================================================
 // Stripe server-side instance
 // ============================================================
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error(
+    'STRIPE_SECRET_KEY is not defined. Add it to your .env.local file.',
+  )
+}
+
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2026-02-25.clover',
   typescript: true,
 })
 
 // ============================================================
-// Plan configuration
+// Price IDs (server-only)
 // ============================================================
 
 export const PLAN_PRICES: Record<string, string> = {
@@ -18,19 +29,3 @@ export const PLAN_PRICES: Record<string, string> = {
   PRO: process.env.STRIPE_PRICE_PRO!,
   BUSINESS: process.env.STRIPE_PRICE_BUSINESS!,
 }
-
-export const PLAN_CREDITS: Record<string, number> = {
-  FREE: 5,
-  BASIC: 50,
-  PRO: 200,
-  BUSINESS: 1000,
-}
-
-export const PLAN_DETAILS = {
-  FREE: { name: 'Gratuito', price: 0, credits: 5, maxFileSize: '5 MB' },
-  BASIC: { name: 'Básico', price: 9, credits: 50, maxFileSize: '10 MB' },
-  PRO: { name: 'Pro', price: 19, credits: 200, maxFileSize: '20 MB' },
-  BUSINESS: { name: 'Business', price: 39, credits: 1000, maxFileSize: '50 MB' },
-} as const
-
-export type PlanKey = keyof typeof PLAN_DETAILS

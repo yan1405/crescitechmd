@@ -31,8 +31,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { PLAN_DETAILS } from '@/lib/stripe'
-import type { PlanKey } from '@/lib/stripe'
+import { PLAN_DETAILS } from '@/lib/plans'
+import type { PlanKey } from '@/lib/plans'
 import { PlanCard } from '@/components/pricing/PlanCard'
 import { BillingHistory } from './BillingHistory'
 

@@ -31,7 +31,7 @@ export type ConversionResult = ConversionSuccess | ConversionError
 // ============================================================
 
 const CONVERSION_TIMEOUT_MS = 60_000 // 60 seconds
-const PYTHON_CMD = process.platform === 'win32' ? 'python3.11' : 'python3.11'
+const PYTHON_CMD = process.env.PYTHON_CMD ?? (process.platform === 'win32' ? 'python' : 'python3')
 const CONVERT_SCRIPT = path.join(process.cwd(), 'lib', 'docling', 'convert.py')
 
 // ============================================================
@@ -98,12 +98,22 @@ export async function convertDocument(
 
     child.on('error', (err) => {
       clearTimeout(timer)
-      console.error('Docling subprocess error:', err.message)
+      console.error('[docling] Subprocess spawn error:', {
+        message: err.message,
+        code: (err as NodeJS.ErrnoException).code,
+        pythonCmd: PYTHON_CMD,
+        script: CONVERT_SCRIPT,
+      })
 
       cleanupFile(filePath)
+
+      const hint = (err as NodeJS.ErrnoException).code === 'ENOENT'
+        ? ` Python command "${PYTHON_CMD}" não encontrado. Defina PYTHON_CMD no .env.local.`
+        : ''
+
       settle({
         success: false,
-        error: 'Erro ao iniciar processo de conversão. Tente novamente ou contate suporte.',
+        error: `Erro ao iniciar processo de conversão.${hint} Tente novamente ou contate suporte.`,
         errorType: 'UNKNOWN',
       })
     })
@@ -122,8 +132,12 @@ export async function convertDocument(
         settle(result)
       } catch {
         // stdout wasn't valid JSON
-        console.error('Docling stdout parse error. stderr:', stderr)
-        console.error('Docling stdout:', stdout.substring(0, 500))
+        console.error('[docling] stdout parse error:', {
+          exitCode: code,
+          stderr: stderr.substring(0, 1000),
+          stdout: stdout.substring(0, 500),
+          pythonCmd: PYTHON_CMD,
+        })
 
         cleanupFile(filePath)
         settle({

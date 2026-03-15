@@ -142,6 +142,15 @@ export async function POST(request: NextRequest) {
       await cleanupTempFile(tempFilePath)
       tempFilePath = null
 
+      console.error('[convert] Conversion failed:', {
+        fileName: validation.file.name,
+        mimeType: validation.mimeType,
+        extension: validation.extension,
+        sizeBytes: validation.sizeBytes,
+        error: conversionResult.error,
+        errorType: conversionResult.errorType,
+      })
+
       // Log failure
       await prisma.auditLog.create({
         data: {
