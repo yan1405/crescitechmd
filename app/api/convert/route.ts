@@ -14,6 +14,8 @@ import { uploadMarkdown } from '@/lib/blob-storage'
 import { conversionOptionsSchema } from '@/lib/validations/convert'
 import { sendConversionCompletedEmail, sendCreditsDepletedEmail } from '@/lib/email'
 
+export const maxDuration = 180
+
 // ============================================================
 // Rate limiting (in-memory, per-instance)
 // ============================================================

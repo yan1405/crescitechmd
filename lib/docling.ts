@@ -30,7 +30,7 @@ export type ConversionResult = ConversionSuccess | ConversionError
 // Constants
 // ============================================================
 
-const CONVERSION_TIMEOUT_MS = 60_000 // 60 seconds
+const CONVERSION_TIMEOUT_MS = 180_000 // 180 seconds (Render free tier cold-start ~50s)
 
 // Subprocess fallback (local dev)
 const PYTHON_CMD = process.env.PYTHON_CMD ?? (process.platform === 'win32' ? 'python' : 'python3')
@@ -101,7 +101,7 @@ async function convertViaApi(
       return {
         success: false,
         error:
-          'Timeout após 60 segundos. Arquivo muito complexo. Reduza o tamanho ou número de páginas.',
+          'Timeout após 180 segundos. Arquivo muito complexo. Reduza o tamanho ou número de páginas.',
         errorType: 'TIMEOUT',
       }
     }
@@ -165,7 +165,7 @@ async function convertViaSubprocess(
       settle({
         success: false,
         error:
-          'Timeout após 60 segundos. Arquivo muito complexo. Reduza o tamanho ou número de páginas.',
+          'Timeout após 180 segundos. Arquivo muito complexo. Reduza o tamanho ou número de páginas.',
         errorType: 'TIMEOUT',
       })
     }, CONVERSION_TIMEOUT_MS)
