@@ -23,13 +23,7 @@ from converter import convert
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        from docling.document_converter import DocumentConverter
-        from docling.datamodel.base_models import InputFormat
-        from docling_core.types.doc.labels import DocItemLabel
-        print("[startup] Docling modules preloaded successfully")
-    except ImportError as e:
-        print(f"[startup] WARNING: Failed to preload Docling: {e}")
+    print("[startup] CrescitechMD Docling API ready")
     yield
 
 
