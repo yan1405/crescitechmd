@@ -136,6 +136,7 @@ export async function POST(request: NextRequest) {
     await fs.writeFile(tempFilePath, fileBuffer)
 
     // ── 7. Execute Docling conversion ──
+    console.log('[convert] DOCLING_API_URL:', process.env.DOCLING_API_URL ? 'SET' : 'NOT SET')
     const conversionResult = await convertDocument(tempFilePath, options)
 
     if (!conversionResult.success) {
