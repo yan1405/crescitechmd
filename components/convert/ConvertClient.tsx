@@ -37,6 +37,14 @@ interface ConvertClientProps {
 }
 
 // ============================================================
+// Helpers
+// ============================================================
+
+function getFileExtension(fileName: string): string {
+  return fileName.split('.').pop()?.toLowerCase() ?? ''
+}
+
+// ============================================================
 // Component
 // ============================================================
 
@@ -85,26 +93,86 @@ export function ConvertClient({ credits, maxCredits, plan }: ConvertClientProps)
     const startTime = Date.now()
 
     try {
+      // ── Step 1: Call Next.js to validate auth + credits ──
       const formData = new FormData()
       formData.append('file', file)
       formData.append('preserveImages', String(options.preserveImages))
       formData.append('preserveTables', String(options.preserveTables))
       formData.append('preserveHeaders', String(options.preserveHeaders))
 
-      const response = await fetch('/api/convert', {
+      const authResponse = await fetch('/api/convert', {
         method: 'POST',
         body: formData,
       })
 
-      const data = await response.json()
+      const authData = await authResponse.json()
 
-      if (!response.ok) {
+      if (!authResponse.ok) {
         setState({
           status: 'error',
           file,
-          errorMessage: data.error || 'Erro desconhecido. Tente novamente.',
+          errorMessage: authData.error || 'Erro na validação. Tente novamente.',
         })
-        toast.error(data.error || 'Erro na conversão')
+        toast.error(authData.error || 'Erro na validação')
+        return
+      }
+
+      const { proxyUrl, apiKey, options: serverOptions } = authData as {
+        proxyUrl: string
+        apiKey: string
+        options: { preserveImages: boolean; preserveTables: boolean; preserveHeaders: boolean }
+      }
+
+      // ── Step 2: Send file directly to Render (bypasses Vercel timeout) ──
+      const renderFormData = new FormData()
+      renderFormData.append('file', file)
+      renderFormData.append('options', JSON.stringify(serverOptions))
+
+      const renderResponse = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'X-API-Key': apiKey,
+        },
+        body: renderFormData,
+      })
+
+      const renderData = await renderResponse.json()
+
+      if (!renderData.success) {
+        setState({
+          status: 'error',
+          file,
+          errorMessage: renderData.error || 'Erro na conversão. Tente novamente.',
+        })
+        toast.error(renderData.error || 'Erro na conversão')
+        return
+      }
+
+      const processingTime = (Date.now() - startTime) / 1000
+
+      // ── Step 3: Call /api/convert/complete to save result + debit credit ──
+      const completeResponse = await fetch('/api/convert/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          markdown: renderData.markdown,
+          fileName: file.name,
+          fileSize: file.size,
+          fileExtension: getFileExtension(file.name),
+          processingTime: Math.round(processingTime),
+          options: serverOptions,
+        }),
+      })
+
+      const completeData = await completeResponse.json()
+
+      if (!completeResponse.ok) {
+        setState({
+          status: 'error',
+          file,
+          errorMessage: completeData.error || 'Erro ao salvar resultado. Tente novamente.',
+        })
+        toast.error(completeData.error || 'Erro ao salvar resultado')
         return
       }
 
@@ -114,8 +182,8 @@ export function ConvertClient({ credits, maxCredits, plan }: ConvertClientProps)
       // Brief delay at 100% before showing result
       await new Promise((r) => setTimeout(r, 300))
 
-      setState({ status: 'success', file, result: data, elapsedSeconds })
-      setDisplayCredits(data.creditsRemaining)
+      setState({ status: 'success', file, result: completeData, elapsedSeconds })
+      setDisplayCredits(completeData.creditsRemaining)
       toast.success('Conversão concluída com sucesso!')
     } catch {
       setState({
