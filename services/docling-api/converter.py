@@ -4,9 +4,13 @@ Extracted from lib/docling/convert.py for use by the FastAPI microservice.
 """
 
 import logging
+import os
 import time
 import traceback
 from pathlib import Path
+
+os.environ["DOCLING_ARTIFACTS_PATH"] = "/tmp/docling-models"
+os.makedirs("/tmp/docling-models", exist_ok=True)
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +42,9 @@ def convert(file_path: str, options: dict) -> dict:
 
         # Import Docling (lazy import to fail fast on other errors)
         logger.info("[converter] Importando Docling...")
-        from docling.document_converter import DocumentConverter
+        from docling.document_converter import DocumentConverter, PdfFormatOption
         from docling.datamodel.base_models import InputFormat
+        from docling.datamodel.pipeline_options import PdfPipelineOptions
         from docling_core.types.doc.labels import DocItemLabel
         from docling_core.types.doc.base import ImageRefMode
         logger.info("[converter] Docling importado com sucesso")
@@ -64,9 +69,20 @@ def convert(file_path: str, options: dict) -> dict:
                 "errorType": "UNSUPPORTED",
             }
 
-        # Create converter with allowed format
+        # Create converter — OCR disabled to avoid missing model files on HF Spaces
         logger.info(f"[converter] Criando DocumentConverter para formato: {ext}")
-        converter = DocumentConverter(allowed_formats=[input_format])
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = False
+        pipeline_options.do_table_structure = False
+        pipeline_options.artifacts_path = None
+
+        converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_options=pipeline_options
+                )
+            }
+        )
 
         # Convert document
         logger.info(f"[converter] Convertendo documento: {path.name}")
@@ -74,7 +90,7 @@ def convert(file_path: str, options: dict) -> dict:
         logger.info(f"[converter] Conversão concluída, status: {result.status}")
 
         # Check conversion status
-        from docling.datamodel.document import ConversionStatus
+        from docling.datamodel.base_models import ConversionStatus
 
         if result.status != ConversionStatus.SUCCESS:
             errors = "; ".join(str(e) for e in result.errors) if result.errors else "Erro desconhecido"
