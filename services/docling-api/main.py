@@ -5,8 +5,10 @@ FastAPI service that converts documents to Markdown using Docling.
 
 import os
 import json
+import logging
 import tempfile
 import shutil
+import traceback
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -16,6 +18,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from converter import convert
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -114,7 +119,9 @@ async def convert_document(
             shutil.copyfileobj(file.file, f)
 
         # Run conversion
+        logger.info(f"[convert] Processando arquivo: {file.filename}, tamanho: {file.size}")
         result = convert(tmp_path, parsed_options)
+        logger.info(f"[convert] Resultado: {result.get('success')}")
 
         status_code = 200 if result.get("success") else 422
         return JSONResponse(content=result, status_code=status_code)
@@ -138,6 +145,8 @@ async def convert_document(
             status_code=422,
         )
     except Exception as e:
+        logger.error(f"[convert] Erro inesperado: {type(e).__name__}: {str(e)}")
+        logger.error(f"[convert] Traceback: {traceback.format_exc()}")
         return JSONResponse(
             content={
                 "success": False,
